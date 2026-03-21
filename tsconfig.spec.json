@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "CommonJS",
+        "target": "es2017",
+        "allowJs": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "esModuleInterop": true,
+        "lib": ["es2017", "dom"],
+        "skipLibCheck": true
+    },
+    "include": [
+        "fontes/**/*",
+        "testes/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "CommonJS",
+        "target": "es2017",
+        "rootDir": "fontes",
+        "allowJs": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true,
+        "esModuleInterop": true,
+        "lib": ["es2017", "dom"],
+        "skipLibCheck": true
+    },
+    "exclude": [
+        "coverage",
+        "dist/**/*",
+        "jest.config.ts",
+        "node_modules",
+        "testes"
+    ]
+}
