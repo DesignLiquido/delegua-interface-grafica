@@ -38,7 +38,7 @@ public final class HostSwing {
         BufferedReader entrada = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
 
         HostSwing host = new HostSwing(saida);
-        host.enviar(mensagem("pronto"));
+        host.enviar(host.mensagem("pronto"));
 
         String linha;
         while ((linha = entrada.readLine()) != null) {
@@ -126,7 +126,7 @@ public final class HostSwing {
         }
 
         JButton botao = new JButton(rotulo);
-        botao.addActionListener(_ -> {
+        botao.addActionListener(eventoAcao -> {
             JsonObject evento = mensagem("evento");
             evento.addProperty("componenteId", id);
             evento.addProperty("evento", "clique");
@@ -232,6 +232,12 @@ public final class HostSwing {
             atualizado.addProperty("id", id);
             atualizado.addProperty("valor", texto);
             enviar(atualizado);
+
+            JsonObject evento = mensagem("evento");
+            evento.addProperty("componenteId", id);
+            evento.addProperty("evento", "alterado");
+            evento.addProperty("valor", texto);
+            enviar(evento);
         }
 
         enviar(recebido(mensagem));
@@ -257,11 +263,7 @@ public final class HostSwing {
             return null;
         }
 
-        if (componente instanceof Container container) {
-            return container;
-        }
-
-        return null;
+        return componente;
     }
 
     private JsonObject recebido(JsonObject original) {

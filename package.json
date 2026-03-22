@@ -12,7 +12,7 @@
         "empacotar": "yarn rimraf ./dist && tsc && yarn copyfiles -V ./README.md ./dist && yarn copyfiles -V ./LICENSE ./dist && yarn copyfiles -V ./package.json ./dist",
         "publicar-npm": "npm publish --access public",
         "testes-unitarios": "yarn jest --coverage",
-        "host-java-swing:jar": "gradle -p host-java-swing jar",
+        "host-java-swing:jar": "gradle -p host-java-swing fatJar",
         "testes-e2e-java-swing": "node scripts/rodar-teste-e2e-java-swing.js",
         "lint": "yarn eslint . --ext .ts --fix"
     },

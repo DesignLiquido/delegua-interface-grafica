@@ -5,3 +5,7 @@ node_modules/
 # Claude
 .claude/
 CLAUDE.md
+
+# Java Swing
+host-java-swing/.gradle/
+host-java-swing/build/

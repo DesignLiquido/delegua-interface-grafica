@@ -56,6 +56,11 @@ function localizarJarHostSwing() {
         return null;
     }
 
+    const jarComDependencias = jars.find((arquivo) => arquivo.toLowerCase().includes('-all.jar'));
+    if (jarComDependencias) {
+        return path.resolve(pastaLibs, jarComDependencias);
+    }
+
     return path.resolve(pastaLibs, jars[jars.length - 1]);
 }
 
@@ -63,7 +68,7 @@ function main() {
     const gradleComando = descobrirComandoGradle();
 
     console.log('[e2e-java-swing] Compilando host Java Swing...');
-    executarComando(gradleComando, ['jar'], pastaHostSwing, process.env);
+    executarComando(gradleComando, ['fatJar'], pastaHostSwing, process.env);
 
     const jarHost = localizarJarHostSwing();
     if (!jarHost) {
@@ -87,10 +92,7 @@ function main() {
 try {
     main();
 } catch (erro) {
-    if (erro.message && erro.message.includes('Comando falhou') && erro.message.includes('gradle')) {
-        console.error('[e2e-java-swing] Dica: instale Gradle ou adicione gradlew no projeto host-java-swing.');
-        console.error('[e2e-java-swing] Alternativa: defina DELEGUA_SWING_E2E_GRADLE_CMD com um comando valido.');
-    }
+    console.error('[e2e-java-swing] Verifique os erros exibidos acima (build Java ou execucao do teste).');
     console.error(`[e2e-java-swing] Falha: ${erro.message}`);
     process.exit(1);
 }

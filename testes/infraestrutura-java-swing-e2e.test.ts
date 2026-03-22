@@ -39,18 +39,20 @@ descreverE2E('InfraestruturaJavaSwing E2E com host real', () => {
             tempoLimiteProntoMs: 10_000,
         });
 
-        const janela = infraestrutura.criarJanela(480, 300, 'E2E Swing');
-        const caixa = infraestrutura.criarCaixaTexto(janela, '');
+        try {
+            const janela = infraestrutura.criarJanela(480, 300, 'E2E Swing');
+            const caixa = infraestrutura.criarCaixaTexto(janela, '');
 
-        const callbackAlterado = jest.fn().mockResolvedValue(undefined);
-        infraestrutura.conectarEvento(caixa, 'alterado', callbackAlterado);
+            const callbackAlterado = jest.fn().mockResolvedValue(undefined);
+            infraestrutura.conectarEvento(caixa, 'alterado', callbackAlterado);
 
-        infraestrutura.definirTexto(caixa, 'texto-e2e');
+            infraestrutura.definirTexto(caixa, 'texto-e2e');
 
-        await esperarAte(() => callbackAlterado.mock.calls.length > 0, 10_000);
+            await esperarAte(() => callbackAlterado.mock.calls.length > 0, 10_000);
 
-        expect(infraestrutura.obterTexto(caixa)).toBe('texto-e2e');
-
-        infraestrutura.encerrar();
-    });
+            expect(infraestrutura.obterTexto(caixa)).toBe('texto-e2e');
+        } finally {
+            infraestrutura.encerrar();
+        }
+    }, 20_000);
 });

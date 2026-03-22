@@ -1,0 +1,67 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes-e-build:
+    name: Testes e Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Instalar dependencias
+        run: yarn --frozen-lockfile
+
+      - name: Rodar testes unitarios
+        run: yarn testes-unitarios
+
+      - name: Rodar build
+        run: yarn empacotar
+
+  swing-e2e:
+    name: Swing E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.4
+
+      - name: Instalar Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Instalar dependencias
+        run: yarn --frozen-lockfile
+
+      - name: Rodar E2E Java Swing
+        run: xvfb-run -a yarn testes-e2e-java-swing
