@@ -55,10 +55,51 @@ A biblioteca é dividida em duas camadas:
 
 ### Infraestruturas disponíveis
 
-| Classe | Pacote | Descrição |
-|--------|--------|-----------|
-| `InfraestruturaElectron` | este pacote | Cria elementos DOM no processo de renderização do Electron. É a infraestrutura padrão usada por `delegua-node`. |
-| `InfraestruturaVazia` | este pacote | Infraestrutura sem operações visuais, usada em testes unitários e ambientes sem DOM. |
+| Classe | Ambiente | Descrição |
+|--------|----------|-----------|
+| `InfraestruturaElectron` | Processo renderer do Electron | Cria elementos DOM diretamente no `document.body` da janela Electron. Selecionada automaticamente quando `document` está disponível. |
+| `InfraestruturaVazia` | Qualquer (fallback) | Sem operações visuais; mantém estado de texto em memória. Usada em testes unitários e quando nenhuma outra infraestrutura se aplica. |
+| `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. |
+| `InfraestruturaElectronSpawn` *(em `delegua-node`)* | Linha de comando (Node.js) | Spawna um processo Electron filho e comunica-se via stdin/stdout com o mesmo protocolo JSON de `InfraestruturaWebView`. Selecionada automaticamente quando o pacote `electron` está instalado. |
+
+### Como a infraestrutura é escolhida em `delegua-node`
+
+Ao importar `interfaceGrafica` em um programa Delégua, `delegua-node` escolhe a infraestrutura na seguinte ordem de prioridade:
+
+1. **`InfraestruturaWebView`** — se a extensão VS Code tiver registrado uma fábrica de painel via `definirFabricaPainelWebView()` (veja abaixo).
+2. **`InfraestruturaElectron`** — se `document` estiver disponível (processo renderer do Electron).
+3. **`InfraestruturaElectronSpawn`** *(em `delegua-node`)* — se o pacote `electron` estiver instalado (local ou globalmente). Spawna um processo Electron filho e comunica-se via stdin/stdout.
+4. **`InfraestruturaVazia`** — fallback final; emite um aviso no console e não exibe nenhuma janela.
+
+### Executando programas com interface gráfica
+
+#### Linha de comando (Node.js puro)
+
+Rodar um programa Delégua diretamente pelo terminal (`delegua meu-programa.delegua`) cai no **fallback `InfraestruturaVazia`**: o programa executa sem erros, mas nenhuma janela é exibida. Isso é esperado — Node.js não tem DOM.
+
+#### Dentro do VS Code (extensão Delégua)
+
+A extensão Delégua para VS Code pode exibir a janela em um painel nativo chamando `definirFabricaPainelWebView()` antes de executar o programa:
+
+```typescript
+import { definirFabricaPainelWebView } from '@designliquido/delegua-node';
+
+// no método activate() da extensão:
+definirFabricaPainelWebView(() =>
+    vscode.window.createWebviewPanel(
+        'delegua-interface-grafica',
+        'Interface Gráfica – Delégua',
+        vscode.ViewColumn.One,
+        { enableScripts: true }
+    )
+);
+```
+
+Com isso, `ig.iniciar()` abre um painel dentro do próprio VS Code e todos os eventos (cliques, alterações de texto) funcionam normalmente.
+
+#### Processo renderer do Electron
+
+Se o programa Delégua for executado diretamente dentro de um processo renderer Electron (onde `document` está disponível), `InfraestruturaElectron` é selecionada automaticamente e a janela é renderizada como um overlay DOM sobre a página existente.
 
 Para usar uma infraestrutura diferente (ou criar a sua própria), implemente `InfraestruturaGraficaInterface` e passe a instância ao construtor de `InterfaceGrafica`:
 

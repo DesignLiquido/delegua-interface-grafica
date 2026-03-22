@@ -9,7 +9,7 @@
         "url": "git+https://github.com/DesignLiquido/delegua-interface-grafica.git"
     },
     "scripts": {
-        "empacotar": "yarn rimraf ./dist && tsc && yarn copyfiles -V ./README.md ./dist && yarn copyfiles -V ./LICENSE ./dist",
+        "empacotar": "yarn rimraf ./dist && tsc && yarn copyfiles -V ./README.md ./dist && yarn copyfiles -V ./LICENSE ./dist && yarn copyfiles -V ./package.json ./dist",
         "publicar-npm": "npm publish --access public",
         "testes-unitarios": "yarn jest --coverage",
         "lint": "yarn eslint . --ext .ts --fix"
@@ -25,7 +25,7 @@
     "publishConfig": {
         "registry": "https://registry.npmjs.org/"
     },
-    "dependencies": {
+    "peerDependencies": {
         "@designliquido/delegua": ">=1.15.1"
     },
     "devDependencies": {

@@ -1,7 +1,10 @@
 import { InfraestruturaElectron } from './infraestruturas/electron/infraestrutura-electron';
+import { InfraestruturaVazia } from './infraestruturas/vazia/infraestrutura-vazia';
 import { InterfaceGrafica } from './interface-grafica';
 
-const _infraestrutura = new InfraestruturaElectron();
+const _infraestrutura = typeof document !== 'undefined'
+    ? new InfraestruturaElectron()
+    : new InfraestruturaVazia();
 const _ig = new InterfaceGrafica(_infraestrutura);
 
 export const DeleguaModuloInterfaceGrafica = {
