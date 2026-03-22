@@ -1,6 +1,7 @@
 import { InfraestruturaElectron } from './infraestruturas/electron/infraestrutura-electron';
 import { InfraestruturaGtk } from './infraestruturas/gtk/infraestrutura-gtk';
 import { InfraestruturaJavaSwing } from './infraestruturas/java-swing/infraestrutura-java-swing';
+import { InfraestruturaMacOS } from './infraestruturas/macos/infraestrutura-macos';
 import { InfraestruturaVazia } from './infraestruturas/vazia/infraestrutura-vazia';
 import { InfraestruturaWindows } from './infraestruturas/windows/infraestrutura-windows';
 import { InterfaceGrafica } from './interface-grafica';
@@ -30,6 +31,15 @@ function obterArgumentosGtkDoAmbiente(): string[] | undefined {
 
 function obterArgumentosWindowsDoAmbiente(): string[] | undefined {
     const argumentosDefinidos = process.env.DELEGUA_INTERFACE_GRAFICA_WINDOWS_ARGUMENTOS;
+    if (!argumentosDefinidos) {
+        return undefined;
+    }
+
+    return argumentosDefinidos.split(' ').filter(Boolean);
+}
+
+function obterArgumentosMacOSDoAmbiente(): string[] | undefined {
+    const argumentosDefinidos = process.env.DELEGUA_INTERFACE_GRAFICA_MACOS_ARGUMENTOS;
     if (!argumentosDefinidos) {
         return undefined;
     }
@@ -84,6 +94,22 @@ function criarInfraestruturaPadrao() {
         } catch (erro: any) {
             console.warn(
                 '[delegua-interface-grafica] Falha ao iniciar backend windows. ' +
+                `Usando InfraestruturaVazia como fallback. Erro: ${erro?.message ?? 'desconhecido'}`
+            );
+            return new InfraestruturaVazia();
+        }
+    }
+
+    if (backendPreferido === 'macos') {
+        try {
+            return new InfraestruturaMacOS({
+                comando: process.env.DELEGUA_INTERFACE_GRAFICA_MACOS_COMANDO,
+                argumentos: obterArgumentosMacOSDoAmbiente(),
+                diretorioTrabalho: process.env.DELEGUA_INTERFACE_GRAFICA_MACOS_CWD,
+            });
+        } catch (erro: any) {
+            console.warn(
+                '[delegua-interface-grafica] Falha ao iniciar backend macos. ' +
                 `Usando InfraestruturaVazia como fallback. Erro: ${erro?.message ?? 'desconhecido'}`
             );
             return new InfraestruturaVazia();
