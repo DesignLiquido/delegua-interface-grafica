@@ -1,6 +1,6 @@
 {
     "name": "@designliquido/delegua-interface-grafica",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Biblioteca de interface gráfica para Delégua",
     "main": "index.js",
     "types": "index.d.ts",
