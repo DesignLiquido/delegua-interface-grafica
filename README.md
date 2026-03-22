@@ -58,6 +58,7 @@ A biblioteca é dividida em duas camadas:
 | Classe | Ambiente | Descrição |
 |--------|----------|-----------|
 | `InfraestruturaElectron` | Processo renderer do Electron | Cria elementos DOM diretamente no `document.body` da janela Electron. Selecionada automaticamente quando `document` está disponível. |
+| `InfraestruturaGtk` *(experimental)* | Node.js + host GTK externo | Encaminha comandos de UI para um processo externo GTK via JSON em stdin/stdout. Recomendado para ambientes Linux-first. |
 | `InfraestruturaJavaSwing` *(experimental)* | Node.js + host Java externo | Encaminha comandos de UI para um processo externo Java Swing via JSON em stdin/stdout. Requer um host Swing compatível com o protocolo da biblioteca. |
 | `InfraestruturaVazia` | Qualquer (fallback) | Sem operações visuais; mantém estado de texto em memória. Usada em testes unitários e quando nenhuma outra infraestrutura se aplica. |
 | `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. |
@@ -130,6 +131,22 @@ Variáveis opcionais para o host Swing:
 - `DELEGUA_INTERFACE_GRAFICA_SWING_CWD` (diretório de trabalho para o processo)
 
 Se o backend Swing falhar ao iniciar, a biblioteca faz fallback automático para `InfraestruturaVazia` com aviso em `console.warn`.
+
+### Selecionando backend GTK por variáveis de ambiente
+
+O módulo `DeleguaModuloInterfaceGrafica` pode inicializar o backend GTK automaticamente quando:
+
+```bash
+DELEGUA_INTERFACE_GRAFICA_BACKEND=gtk
+```
+
+Variáveis opcionais para o host GTK:
+
+- `DELEGUA_INTERFACE_GRAFICA_GTK_COMANDO` (padrão: `delegua-interface-grafica-gtk-host`)
+- `DELEGUA_INTERFACE_GRAFICA_GTK_ARGUMENTOS` (argumentos separados por espaço)
+- `DELEGUA_INTERFACE_GRAFICA_GTK_CWD` (diretório de trabalho para o processo)
+
+Se o backend GTK falhar ao iniciar, a biblioteca faz fallback automático para `InfraestruturaVazia` com aviso em `console.warn`.
 
 ### Protocolo do host externo
 

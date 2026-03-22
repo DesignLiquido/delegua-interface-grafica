@@ -1,4 +1,5 @@
 import { InfraestruturaElectron } from './infraestruturas/electron/infraestrutura-electron';
+import { InfraestruturaGtk } from './infraestruturas/gtk/infraestrutura-gtk';
 import { InfraestruturaJavaSwing } from './infraestruturas/java-swing/infraestrutura-java-swing';
 import { InfraestruturaVazia } from './infraestruturas/vazia/infraestrutura-vazia';
 import { InterfaceGrafica } from './interface-grafica';
@@ -17,6 +18,15 @@ function obterArgumentosSwingDoAmbiente(): string[] | undefined {
     return undefined;
 }
 
+function obterArgumentosGtkDoAmbiente(): string[] | undefined {
+    const argumentosDefinidos = process.env.DELEGUA_INTERFACE_GRAFICA_GTK_ARGUMENTOS;
+    if (!argumentosDefinidos) {
+        return undefined;
+    }
+
+    return argumentosDefinidos.split(' ').filter(Boolean);
+}
+
 function criarInfraestruturaPadrao() {
     const backendPreferido = typeof process !== 'undefined'
         ? process.env.DELEGUA_INTERFACE_GRAFICA_BACKEND
@@ -32,6 +42,22 @@ function criarInfraestruturaPadrao() {
         } catch (erro: any) {
             console.warn(
                 '[delegua-interface-grafica] Falha ao iniciar backend java-swing. ' +
+                `Usando InfraestruturaVazia como fallback. Erro: ${erro?.message ?? 'desconhecido'}`
+            );
+            return new InfraestruturaVazia();
+        }
+    }
+
+    if (backendPreferido === 'gtk') {
+        try {
+            return new InfraestruturaGtk({
+                comando: process.env.DELEGUA_INTERFACE_GRAFICA_GTK_COMANDO,
+                argumentos: obterArgumentosGtkDoAmbiente(),
+                diretorioTrabalho: process.env.DELEGUA_INTERFACE_GRAFICA_GTK_CWD,
+            });
+        } catch (erro: any) {
+            console.warn(
+                '[delegua-interface-grafica] Falha ao iniciar backend gtk. ' +
                 `Usando InfraestruturaVazia como fallback. Erro: ${erro?.message ?? 'desconhecido'}`
             );
             return new InfraestruturaVazia();
