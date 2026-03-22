@@ -17,6 +17,8 @@
         "dist/**/*",
         "jest.config.ts",
         "node_modules",
+        "scripts",
+        "host-java-swing",
         "testes"
     ]
 }

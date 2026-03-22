@@ -58,6 +58,7 @@ A biblioteca é dividida em duas camadas:
 | Classe | Ambiente | Descrição |
 |--------|----------|-----------|
 | `InfraestruturaElectron` | Processo renderer do Electron | Cria elementos DOM diretamente no `document.body` da janela Electron. Selecionada automaticamente quando `document` está disponível. |
+| `InfraestruturaJavaSwing` *(experimental)* | Node.js + host Java externo | Encaminha comandos de UI para um processo externo Java Swing via JSON em stdin/stdout. Requer um host Swing compatível com o protocolo da biblioteca. |
 | `InfraestruturaVazia` | Qualquer (fallback) | Sem operações visuais; mantém estado de texto em memória. Usada em testes unitários e quando nenhuma outra infraestrutura se aplica. |
 | `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. |
 | `InfraestruturaElectronSpawn` *(em `delegua-node`)* | Linha de comando (Node.js) | Spawna um processo Electron filho e comunica-se via stdin/stdout com o mesmo protocolo JSON de `InfraestruturaWebView`. Selecionada automaticamente quando o pacote `electron` está instalado. |
@@ -112,6 +113,61 @@ class MinhaInfraestrutura implements InfraestruturaGraficaInterface {
 
 const ig = new InterfaceGrafica(new MinhaInfraestrutura());
 ```
+
+### Selecionando backend Java Swing por variáveis de ambiente
+
+O módulo `DeleguaModuloInterfaceGrafica` pode inicializar o backend Swing automaticamente quando a variável abaixo estiver definida:
+
+```bash
+DELEGUA_INTERFACE_GRAFICA_BACKEND=java-swing
+```
+
+Variáveis opcionais para o host Swing:
+
+- `DELEGUA_INTERFACE_GRAFICA_SWING_COMANDO` (padrão: `java`)
+- `DELEGUA_INTERFACE_GRAFICA_SWING_ARGUMENTOS` (padrão: `-jar delegua-interface-grafica-swing-host.jar`)
+- `DELEGUA_INTERFACE_GRAFICA_SWING_JAR` (atalho para montar automaticamente `-jar <caminho>` quando `DELEGUA_INTERFACE_GRAFICA_SWING_ARGUMENTOS` não estiver definido)
+- `DELEGUA_INTERFACE_GRAFICA_SWING_CWD` (diretório de trabalho para o processo)
+
+Se o backend Swing falhar ao iniciar, a biblioteca faz fallback automático para `InfraestruturaVazia` com aviso em `console.warn`.
+
+### Protocolo do host externo
+
+A especificação do protocolo de mensagens entre TypeScript e hosts externos está em:
+
+- `docs/protocolo-processo-externo-v1.md`
+
+Um esqueleto inicial do host Java Swing foi adicionado em:
+
+- `host-java-swing/`
+
+### Teste E2E opcional com host Java real
+
+Por padrão, os testes E2E de Swing ficam desativados para não depender de Java/JAR em todos os ambientes.
+
+Para executar:
+
+1. Gere o JAR do host Java Swing.
+2. Defina as variáveis de ambiente:
+    - `DELEGUA_SWING_E2E=1`
+    - `DELEGUA_SWING_E2E_JAR=<caminho-absoluto-do-jar>`
+    - opcional: `DELEGUA_SWING_E2E_COMANDO=java`
+3. Rode `yarn testes-unitarios`.
+
+O teste E2E está em `testes/infraestrutura-java-swing-e2e.test.ts`.
+
+Alternativa automatizada (compila host + roda E2E):
+
+```bash
+yarn testes-e2e-java-swing
+```
+
+Requisitos para esse comando:
+
+- Gradle instalado no ambiente, ou
+- `gradlew`/`gradlew.bat` presente em `host-java-swing/`.
+
+Opcionalmente, personalize o comando Gradle com `DELEGUA_SWING_E2E_GRADLE_CMD`.
 
 ## Desenvolvimento
 

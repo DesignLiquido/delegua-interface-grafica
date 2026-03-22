@@ -1,10 +1,49 @@
 import { InfraestruturaElectron } from './infraestruturas/electron/infraestrutura-electron';
+import { InfraestruturaJavaSwing } from './infraestruturas/java-swing/infraestrutura-java-swing';
 import { InfraestruturaVazia } from './infraestruturas/vazia/infraestrutura-vazia';
 import { InterfaceGrafica } from './interface-grafica';
 
-const _infraestrutura = typeof document !== 'undefined'
-    ? new InfraestruturaElectron()
-    : new InfraestruturaVazia();
+function obterArgumentosSwingDoAmbiente(): string[] | undefined {
+    const argumentosDefinidos = process.env.DELEGUA_INTERFACE_GRAFICA_SWING_ARGUMENTOS;
+    if (argumentosDefinidos) {
+        return argumentosDefinidos.split(' ').filter(Boolean);
+    }
+
+    const caminhoJar = process.env.DELEGUA_INTERFACE_GRAFICA_SWING_JAR;
+    if (caminhoJar) {
+        return ['-jar', caminhoJar];
+    }
+
+    return undefined;
+}
+
+function criarInfraestruturaPadrao() {
+    const backendPreferido = typeof process !== 'undefined'
+        ? process.env.DELEGUA_INTERFACE_GRAFICA_BACKEND
+        : undefined;
+
+    if (backendPreferido === 'java-swing') {
+        try {
+            return new InfraestruturaJavaSwing({
+                comando: process.env.DELEGUA_INTERFACE_GRAFICA_SWING_COMANDO,
+                argumentos: obterArgumentosSwingDoAmbiente(),
+                diretorioTrabalho: process.env.DELEGUA_INTERFACE_GRAFICA_SWING_CWD,
+            });
+        } catch (erro: any) {
+            console.warn(
+                '[delegua-interface-grafica] Falha ao iniciar backend java-swing. ' +
+                `Usando InfraestruturaVazia como fallback. Erro: ${erro?.message ?? 'desconhecido'}`
+            );
+            return new InfraestruturaVazia();
+        }
+    }
+
+    return typeof document !== 'undefined'
+        ? new InfraestruturaElectron()
+        : new InfraestruturaVazia();
+}
+
+const _infraestrutura = criarInfraestruturaPadrao();
 const _ig = new InterfaceGrafica(_infraestrutura);
 
 export const DeleguaModuloInterfaceGrafica = {
