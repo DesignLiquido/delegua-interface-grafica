@@ -18,7 +18,9 @@
         "jest.config.ts",
         "node_modules",
         "scripts",
+        "host-gtk",
         "host-java-swing",
+        "host-windows",
         "testes"
     ]
 }

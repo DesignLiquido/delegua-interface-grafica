@@ -9,3 +9,11 @@ CLAUDE.md
 # Java Swing
 host-java-swing/.gradle/
 host-java-swing/build/
+
+# GTK host
+host-gtk/target/
+
+# Windows host
+host-windows/bin/
+host-windows/obj/
+host-windows/publish/

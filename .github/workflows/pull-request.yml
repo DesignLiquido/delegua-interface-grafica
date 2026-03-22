@@ -65,3 +65,56 @@ jobs:
 
       - name: Rodar E2E Java Swing
         run: xvfb-run -a yarn testes-e2e-java-swing
+
+  gtk-e2e:
+    name: GTK E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Instalar dependencias GTK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev pkg-config xvfb
+
+      - name: Instalar dependencias
+        run: yarn --frozen-lockfile
+
+      - name: Rodar E2E GTK
+        run: xvfb-run -a yarn testes-e2e-gtk
+
+  windows-e2e:
+    name: Windows E2E
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Instalar dependencias
+        run: yarn --frozen-lockfile
+
+      - name: Rodar E2E Windows
+        run: yarn testes-e2e-windows

@@ -14,6 +14,10 @@
         "testes-unitarios": "yarn jest --coverage",
         "host-java-swing:jar": "gradle -p host-java-swing fatJar",
         "testes-e2e-java-swing": "node scripts/rodar-teste-e2e-java-swing.js",
+        "host-gtk:build": "cargo build --release --manifest-path host-gtk/Cargo.toml",
+        "testes-e2e-gtk": "node scripts/rodar-teste-e2e-gtk.js",
+        "host-windows:publish": "dotnet publish host-windows/DeleguaInterfaceGraficaWindowsHost.csproj -c Release -r win-x64 --self-contained false -o host-windows/publish",
+        "testes-e2e-windows": "node scripts/rodar-teste-e2e-windows.js",
         "lint": "yarn eslint . --ext .ts --fix"
     },
     "keywords": [

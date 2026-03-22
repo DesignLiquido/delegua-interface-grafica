@@ -1,0 +1,12 @@
+[package]
+name = "delegua-interface-grafica-gtk-host"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "delegua-interface-grafica-gtk-host"
+path = "src/main.rs"
+
+[dependencies]
+gtk4 = "0.8"
+serde_json = "1.0"

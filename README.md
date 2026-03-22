@@ -60,6 +60,7 @@ A biblioteca é dividida em duas camadas:
 | `InfraestruturaElectron` | Processo renderer do Electron | Cria elementos DOM diretamente no `document.body` da janela Electron. Selecionada automaticamente quando `document` está disponível. |
 | `InfraestruturaGtk` *(experimental)* | Node.js + host GTK externo | Encaminha comandos de UI para um processo externo GTK via JSON em stdin/stdout. Recomendado para ambientes Linux-first. |
 | `InfraestruturaJavaSwing` *(experimental)* | Node.js + host Java externo | Encaminha comandos de UI para um processo externo Java Swing via JSON em stdin/stdout. Requer um host Swing compatível com o protocolo da biblioteca. |
+| `InfraestruturaWindows` *(experimental)* | Node.js + host Windows externo | Encaminha comandos de UI para um processo externo Windows (WPF/WinUI/WinForms) via JSON em stdin/stdout. Recomendado para ambientes Windows-first. |
 | `InfraestruturaVazia` | Qualquer (fallback) | Sem operações visuais; mantém estado de texto em memória. Usada em testes unitários e quando nenhuma outra infraestrutura se aplica. |
 | `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. |
 | `InfraestruturaElectronSpawn` *(em `delegua-node`)* | Linha de comando (Node.js) | Spawna um processo Electron filho e comunica-se via stdin/stdout com o mesmo protocolo JSON de `InfraestruturaWebView`. Selecionada automaticamente quando o pacote `electron` está instalado. |
@@ -148,6 +149,22 @@ Variáveis opcionais para o host GTK:
 
 Se o backend GTK falhar ao iniciar, a biblioteca faz fallback automático para `InfraestruturaVazia` com aviso em `console.warn`.
 
+### Selecionando backend Windows por variáveis de ambiente
+
+O módulo `DeleguaModuloInterfaceGrafica` pode inicializar o backend Windows automaticamente quando:
+
+```bash
+DELEGUA_INTERFACE_GRAFICA_BACKEND=windows
+```
+
+Variáveis opcionais para o host Windows:
+
+- `DELEGUA_INTERFACE_GRAFICA_WINDOWS_COMANDO` (padrão: `delegua-interface-grafica-windows-host.exe`)
+- `DELEGUA_INTERFACE_GRAFICA_WINDOWS_ARGUMENTOS` (argumentos separados por espaço)
+- `DELEGUA_INTERFACE_GRAFICA_WINDOWS_CWD` (diretório de trabalho para o processo)
+
+Se o backend Windows falhar ao iniciar, a biblioteca faz fallback automático para `InfraestruturaVazia` com aviso em `console.warn`.
+
 ### Protocolo do host externo
 
 A especificação do protocolo de mensagens entre TypeScript e hosts externos está em:
@@ -157,6 +174,14 @@ A especificação do protocolo de mensagens entre TypeScript e hosts externos es
 Um esqueleto inicial do host Java Swing foi adicionado em:
 
 - `host-java-swing/`
+
+Um esqueleto inicial do host GTK foi adicionado em:
+
+- `host-gtk/`
+
+Um esqueleto inicial do host Windows foi adicionado em:
+
+- `host-windows/`
 
 ### Teste E2E opcional com host Java real
 
@@ -185,6 +210,50 @@ Requisitos para esse comando:
 - `gradlew`/`gradlew.bat` presente em `host-java-swing/`.
 
 Opcionalmente, personalize o comando Gradle com `DELEGUA_SWING_E2E_GRADLE_CMD`.
+
+### Teste E2E opcional com host GTK real
+
+Por padrão, os testes E2E de GTK ficam desativados para não depender de Rust + GTK nativo em todos os ambientes.
+
+Para executar manualmente:
+
+1. Compile o host GTK.
+2. Defina as variáveis de ambiente:
+    - `DELEGUA_GTK_E2E=1`
+    - `DELEGUA_GTK_E2E_CMD=<caminho-absoluto-do-executavel>`
+3. Rode `yarn testes-unitarios`.
+
+O teste E2E está em `testes/infraestrutura-gtk-e2e.test.ts`.
+
+Alternativa automatizada (compila host + roda E2E):
+
+```bash
+yarn testes-e2e-gtk
+```
+
+Opcionalmente, personalize o comando cargo com `DELEGUA_GTK_E2E_CARGO_CMD`.
+
+### Teste E2E opcional com host Windows real
+
+Por padrão, os testes E2E de Windows ficam desativados para não depender de .NET/host nativo em todos os ambientes.
+
+Para executar manualmente:
+
+1. Publique o host Windows.
+2. Defina as variáveis de ambiente:
+    - `DELEGUA_WINDOWS_E2E=1`
+    - `DELEGUA_WINDOWS_E2E_EXE=<caminho-absoluto-do-executavel>`
+3. Rode `yarn testes-unitarios`.
+
+O teste E2E está em `testes/infraestrutura-windows-e2e.test.ts`.
+
+Alternativa automatizada (publica host + roda E2E):
+
+```bash
+yarn testes-e2e-windows
+```
+
+Opcionalmente, personalize o comando .NET com `DELEGUA_WINDOWS_E2E_DOTNET_CMD`.
 
 ## Desenvolvimento
 
