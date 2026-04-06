@@ -246,11 +246,34 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
                     elementos[msg.id] = div;
                     break;
                 }
+                case 'criar-caixa-livre': {
+                    const div = document.createElement('div');
+                    div.style.position = 'relative';
+                    elementos[msg.paiId].appendChild(div);
+                    elementos[msg.id] = div;
+                    break;
+                }
                 case 'definir-texto': {
                     const el = elementos[msg.id];
                     if (el) {
                         if (el.tagName === 'INPUT') el.value = msg.texto;
                         else el.textContent = msg.texto;
+                    }
+                    break;
+                }
+                case 'definir-posicao': {
+                    const el = elementos[msg.id];
+                    if (el) {
+                        el.style.left = msg.x + 'px';
+                        el.style.top = msg.y + 'px';
+                    }
+                    break;
+                }
+                case 'definir-tamanho': {
+                    const el = elementos[msg.id];
+                    if (el) {
+                        el.style.width = msg.largura + 'px';
+                        el.style.height = msg.altura + 'px';
                     }
                     break;
                 }
@@ -315,6 +338,12 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
         return { idComponente };
     }
 
+    criarCaixaLivre(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface {
+        const idComponente = this.proximoId();
+        this._enviar({ tipo: 'criar-caixa-livre', id: idComponente, paiId: pai.idComponente });
+        return { idComponente };
+    }
+
     // -------------------------------------------------------------------------
     // Leitura e escrita de propriedades
     // -------------------------------------------------------------------------
@@ -326,6 +355,14 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
 
     obterTexto(componente: ComponenteInterfaceGraficaInterface): string {
         return this.textosComponentes.get(componente.idComponente) ?? '';
+    }
+
+    definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
+        this._enviar({ tipo: 'definir-posicao', id: componente.idComponente, x, y });
+    }
+
+    definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void {
+        this._enviar({ tipo: 'definir-tamanho', id: componente.idComponente, largura, altura });
     }
 
     // -------------------------------------------------------------------------

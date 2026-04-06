@@ -212,6 +212,16 @@ export class InfraestruturaElectron implements InfraestruturaGraficaInterface {
         return this.registrar(caixa);
     }
 
+    criarCaixaLivre(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface {
+        const elementoPai = this.obterElemento(pai);
+        const caixa = document.createElement('div');
+        Object.assign(caixa.style, {
+            position: 'relative',
+        });
+        elementoPai.appendChild(caixa);
+        return this.registrar(caixa);
+    }
+
     // -------------------------------------------------------------------------
     // Leitura e escrita de propriedades
     // -------------------------------------------------------------------------
@@ -231,6 +241,18 @@ export class InfraestruturaElectron implements InfraestruturaGraficaInterface {
             return elemento.value;
         }
         return elemento.textContent ?? '';
+    }
+
+    definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
+        const elemento = this.obterElemento(componente);
+        elemento.style.left = `${x}px`;
+        elemento.style.top = `${y}px`;
+    }
+
+    definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void {
+        const elemento = this.obterElemento(componente);
+        elemento.style.width = `${largura}px`;
+        elemento.style.height = `${altura}px`;
     }
 
     // -------------------------------------------------------------------------

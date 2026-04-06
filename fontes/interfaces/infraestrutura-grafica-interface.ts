@@ -16,10 +16,13 @@ export interface InfraestruturaGraficaInterface {
     criarCaixaTexto(pai: ComponenteInterfaceGraficaInterface, textoInicial: string): ComponenteInterfaceGraficaInterface;
     criarCaixaVertical(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface;
     criarCaixaHorizontal(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface;
+    criarCaixaLivre(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface;
 
     // Leitura e escrita de propriedades
     definirTexto(componente: ComponenteInterfaceGraficaInterface, texto: string): void;
     obterTexto(componente: ComponenteInterfaceGraficaInterface): string;
+    definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void;
+    definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void;
 
     /**
      * Registra um callback nativo a ser invocado quando o evento ocorrer.

@@ -8,6 +8,7 @@ import { ComponenteInterfaceGraficaInterface } from '../../interfaces/componente
 export class InfraestruturaVazia implements InfraestruturaGraficaInterface {
     private contadorIds = 0;
     private textos: Map<string, string> = new Map();
+    private geometrias: Map<string, { x?: number; y?: number; largura?: number; altura?: number }> = new Map();
 
     private novoComponente(): ComponenteInterfaceGraficaInterface {
         return { idComponente: `componente-${++this.contadorIds}` };
@@ -41,12 +42,30 @@ export class InfraestruturaVazia implements InfraestruturaGraficaInterface {
         return this.novoComponente();
     }
 
+    criarCaixaLivre(_pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface {
+        return this.novoComponente();
+    }
+
     definirTexto(componente: ComponenteInterfaceGraficaInterface, texto: string): void {
         this.textos.set(componente.idComponente, texto);
     }
 
     obterTexto(componente: ComponenteInterfaceGraficaInterface): string {
         return this.textos.get(componente.idComponente) ?? '';
+    }
+
+    definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
+        const geometriaAtual = this.geometrias.get(componente.idComponente) ?? {};
+        this.geometrias.set(componente.idComponente, { ...geometriaAtual, x, y });
+    }
+
+    definirTamanho(
+        componente: ComponenteInterfaceGraficaInterface,
+        largura: number,
+        altura: number
+    ): void {
+        const geometriaAtual = this.geometrias.get(componente.idComponente) ?? {};
+        this.geometrias.set(componente.idComponente, { ...geometriaAtual, largura, altura });
     }
 
     conectarEvento(

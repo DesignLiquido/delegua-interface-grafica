@@ -138,6 +138,12 @@ export class InfraestruturaJavaSwing implements InfraestruturaGraficaInterface {
         return { idComponente };
     }
 
+    criarCaixaLivre(pai: ComponenteInterfaceGraficaInterface): ComponenteInterfaceGraficaInterface {
+        const idComponente = this.proximoId();
+        this.enviar({ tipo: 'criar-caixa-livre', id: idComponente, paiId: pai.idComponente });
+        return { idComponente };
+    }
+
     definirTexto(componente: ComponenteInterfaceGraficaInterface, texto: string): void {
         this.textosComponentes.set(componente.idComponente, texto);
         this.enviar({ tipo: 'definir-texto', id: componente.idComponente, texto });
@@ -145,6 +151,14 @@ export class InfraestruturaJavaSwing implements InfraestruturaGraficaInterface {
 
     obterTexto(componente: ComponenteInterfaceGraficaInterface): string {
         return this.textosComponentes.get(componente.idComponente) ?? '';
+    }
+
+    definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
+        this.enviar({ tipo: 'definir-posicao', id: componente.idComponente, x, y });
+    }
+
+    definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void {
+        this.enviar({ tipo: 'definir-tamanho', id: componente.idComponente, largura, altura });
     }
 
     conectarEvento(

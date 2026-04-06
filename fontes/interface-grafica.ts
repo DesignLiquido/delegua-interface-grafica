@@ -12,34 +12,6 @@ import { ComponenteInterfaceGraficaInterface } from './interfaces/componente-int
 export class InterfaceGrafica {
     constructor(private readonly backend: InfraestruturaGraficaInterface) {}
 
-    private obterBackendGeometria(): {
-        criarCaixaLivre: (pai: ComponenteInterfaceGraficaInterface) => ComponenteInterfaceGraficaInterface;
-        definirPosicao: (
-            componente: ComponenteInterfaceGraficaInterface,
-            x: number,
-            y: number
-        ) => void;
-        definirTamanho: (
-            componente: ComponenteInterfaceGraficaInterface,
-            largura: number,
-            altura: number
-        ) => void;
-    } {
-        return this.backend as InfraestruturaGraficaInterface & {
-            criarCaixaLivre: (pai: ComponenteInterfaceGraficaInterface) => ComponenteInterfaceGraficaInterface;
-            definirPosicao: (
-                componente: ComponenteInterfaceGraficaInterface,
-                x: number,
-                y: number
-            ) => void;
-            definirTamanho: (
-                componente: ComponenteInterfaceGraficaInterface,
-                largura: number,
-                altura: number
-            ) => void;
-        };
-    }
-
     /**
      * Cria a janela principal do programa.
      * @param interpretador Passado automaticamente pelo interpretador Delégua.
@@ -131,7 +103,7 @@ export class InterfaceGrafica {
         _interpretador: InterpretadorInterface,
         pai: ComponenteInterfaceGraficaInterface
     ): ComponenteInterfaceGraficaInterface {
-        return this.obterBackendGeometria().criarCaixaLivre(pai);
+        return this.backend.criarCaixaLivre(pai);
     }
 
     /**
@@ -173,7 +145,7 @@ export class InterfaceGrafica {
         x: number,
         y: number
     ): void {
-        this.obterBackendGeometria().definirPosicao(componente, x, y);
+        this.backend.definirPosicao(componente, x, y);
     }
 
     /**
@@ -189,7 +161,7 @@ export class InterfaceGrafica {
         largura: number,
         altura: number
     ): void {
-        this.obterBackendGeometria().definirTamanho(componente, largura, altura);
+        this.backend.definirTamanho(componente, largura, altura);
     }
 
     /**
