@@ -235,6 +235,23 @@ export const DeleguaModuloInterfaceGrafica = {
             '```\n',
         exemploCodigo: 'ig.caixaHorizontal(janela)',
     },
+    caixaLivre: {
+        tipoRetorno: 'objeto',
+        funcao: _ig.caixaLivre.bind(_ig),
+        argumentos: [
+            { nome: 'pai', tipo: 'objeto' },
+        ],
+        documentacao:
+            `# \`InterfaceGrafica.caixaLivre(pai)\`\n\n` +
+            'Cria um contêiner com layout livre para posicionamento por coordenadas.\n\n' +
+            '## Exemplo de Código\n\n' +
+            '```delegua\n' +
+            'var ig = importar("InterfaceGrafica")\n' +
+            'var janela = ig.janela(800, 600, "Exemplo")\n' +
+            'var areaLivre = ig.caixaLivre(janela)\n' +
+            '```\n',
+        exemploCodigo: 'ig.caixaLivre(janela)',
+    },
     definirTexto: {
         tipoRetorno: 'nulo',
         funcao: _ig.definirTexto.bind(_ig),
@@ -271,6 +288,48 @@ export const DeleguaModuloInterfaceGrafica = {
             'escreva(ig.obterTexto(caixa))\n' +
             '```\n',
         exemploCodigo: 'ig.obterTexto(caixa)',
+    },
+    definirPosicao: {
+        tipoRetorno: 'nulo',
+        funcao: _ig.definirPosicao.bind(_ig),
+        argumentos: [
+            { nome: 'componente', tipo: 'objeto' },
+            { nome: 'x', tipo: 'número' },
+            { nome: 'y', tipo: 'número' },
+        ],
+        documentacao:
+            `# \`InterfaceGrafica.definirPosicao(componente, x, y)\`\n\n` +
+            'Define a posição do componente em relação ao contêiner pai.\n\n' +
+            '## Exemplo de Código\n\n' +
+            '```delegua\n' +
+            'var ig = importar("InterfaceGrafica")\n' +
+            'var janela = ig.janela(800, 600, "Exemplo")\n' +
+            'var areaLivre = ig.caixaLivre(janela)\n' +
+            'var botao = ig.botao(areaLivre, "Clique")\n' +
+            'ig.definirPosicao(botao, 40, 60)\n' +
+            '```\n',
+        exemploCodigo: 'ig.definirPosicao(botao, 40, 60)',
+    },
+    definirTamanho: {
+        tipoRetorno: 'nulo',
+        funcao: _ig.definirTamanho.bind(_ig),
+        argumentos: [
+            { nome: 'componente', tipo: 'objeto' },
+            { nome: 'largura', tipo: 'número' },
+            { nome: 'altura', tipo: 'número' },
+        ],
+        documentacao:
+            `# \`InterfaceGrafica.definirTamanho(componente, largura, altura)\`\n\n` +
+            'Define o tamanho do componente em pixels.\n\n' +
+            '## Exemplo de Código\n\n' +
+            '```delegua\n' +
+            'var ig = importar("InterfaceGrafica")\n' +
+            'var janela = ig.janela(800, 600, "Exemplo")\n' +
+            'var areaLivre = ig.caixaLivre(janela)\n' +
+            'var botao = ig.botao(areaLivre, "Clique")\n' +
+            'ig.definirTamanho(botao, 120, 36)\n' +
+            '```\n',
+        exemploCodigo: 'ig.definirTamanho(botao, 120, 36)',
     },
     aoClicar: {
         tipoRetorno: 'nulo',

@@ -12,6 +12,34 @@ import { ComponenteInterfaceGraficaInterface } from './interfaces/componente-int
 export class InterfaceGrafica {
     constructor(private readonly backend: InfraestruturaGraficaInterface) {}
 
+    private obterBackendGeometria(): {
+        criarCaixaLivre: (pai: ComponenteInterfaceGraficaInterface) => ComponenteInterfaceGraficaInterface;
+        definirPosicao: (
+            componente: ComponenteInterfaceGraficaInterface,
+            x: number,
+            y: number
+        ) => void;
+        definirTamanho: (
+            componente: ComponenteInterfaceGraficaInterface,
+            largura: number,
+            altura: number
+        ) => void;
+    } {
+        return this.backend as InfraestruturaGraficaInterface & {
+            criarCaixaLivre: (pai: ComponenteInterfaceGraficaInterface) => ComponenteInterfaceGraficaInterface;
+            definirPosicao: (
+                componente: ComponenteInterfaceGraficaInterface,
+                x: number,
+                y: number
+            ) => void;
+            definirTamanho: (
+                componente: ComponenteInterfaceGraficaInterface,
+                largura: number,
+                altura: number
+            ) => void;
+        };
+    }
+
     /**
      * Cria a janela principal do programa.
      * @param interpretador Passado automaticamente pelo interpretador Delégua.
@@ -95,6 +123,18 @@ export class InterfaceGrafica {
     }
 
     /**
+     * Cria um contêiner com layout livre para posicionamento por coordenadas.
+     * @param interpretador Passado automaticamente pelo interpretador Delégua.
+     * @param pai Componente pai do contêiner.
+     */
+    caixaLivre(
+        _interpretador: InterpretadorInterface,
+        pai: ComponenteInterfaceGraficaInterface
+    ): ComponenteInterfaceGraficaInterface {
+        return this.obterBackendGeometria().criarCaixaLivre(pai);
+    }
+
+    /**
      * Altera o texto de um componente (rótulo ou caixa de texto).
      * @param interpretador Passado automaticamente pelo interpretador Delégua.
      * @param componente Componente a ser alterado.
@@ -118,6 +158,38 @@ export class InterfaceGrafica {
         componente: ComponenteInterfaceGraficaInterface
     ): string {
         return this.backend.obterTexto(componente);
+    }
+
+    /**
+     * Define a posição do componente em relação ao contêiner pai.
+     * @param interpretador Passado automaticamente pelo interpretador Delégua.
+     * @param componente Componente a ser posicionado.
+     * @param x Coordenada horizontal em pixels.
+     * @param y Coordenada vertical em pixels.
+     */
+    definirPosicao(
+        _interpretador: InterpretadorInterface,
+        componente: ComponenteInterfaceGraficaInterface,
+        x: number,
+        y: number
+    ): void {
+        this.obterBackendGeometria().definirPosicao(componente, x, y);
+    }
+
+    /**
+     * Define o tamanho do componente.
+     * @param interpretador Passado automaticamente pelo interpretador Delégua.
+     * @param componente Componente a ser redimensionado.
+     * @param largura Largura em pixels.
+     * @param altura Altura em pixels.
+     */
+    definirTamanho(
+        _interpretador: InterpretadorInterface,
+        componente: ComponenteInterfaceGraficaInterface,
+        largura: number,
+        altura: number
+    ): void {
+        this.obterBackendGeometria().definirTamanho(componente, largura, altura);
     }
 
     /**
