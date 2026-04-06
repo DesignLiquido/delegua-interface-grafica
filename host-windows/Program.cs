@@ -22,7 +22,7 @@ internal static class Program
         runtime.Send(new JsonObject
         {
             ["tipo"] = "pronto",
-            ["versao"] = "1.0.0-windows-host",
+            ["versao"] = "1.1.0-windows-host",
         });
 
         Task.Run(runtime.ProcessInputLoop);
@@ -127,8 +127,14 @@ internal sealed class WindowsHostRuntime
             case "criar-caixa-horizontal":
                 CreateBox(message, false);
                 break;
+            case "criar-caixa-livre":
+                CreateFreeBox(message);
+                break;
             case "definir-texto":
                 SetText(message);
+                break;
+            case "definir-geometria":
+                SetGeometry(message);
                 break;
             case "encerrar":
                 CloseAll();
@@ -213,7 +219,7 @@ internal sealed class WindowsHostRuntime
             });
         };
 
-        parent.Controls.Add(button);
+        AddChild(parent, button);
         controlsById[id] = button;
     }
 
@@ -235,7 +241,7 @@ internal sealed class WindowsHostRuntime
             Text = text,
         };
 
-        parent.Controls.Add(label);
+        AddChild(parent, label);
         controlsById[id] = label;
     }
 
@@ -275,7 +281,7 @@ internal sealed class WindowsHostRuntime
             });
         };
 
-        parent.Controls.Add(textBox);
+        AddChild(parent, textBox);
         controlsById[id] = textBox;
     }
 
@@ -297,7 +303,34 @@ internal sealed class WindowsHostRuntime
             WrapContents = !vertical,
         };
 
-        parent.Controls.Add(panel);
+        AddChild(parent, panel);
+        controlsById[id] = panel;
+    }
+
+    private void CreateFreeBox(JsonObject message)
+    {
+        var id = GetString(message, "id");
+        var parentId = GetString(message, "paiId");
+
+        var parent = GetParent(parentId, "criar-caixa-livre");
+        if (parent is null || string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        var panel = new Panel
+        {
+            Width = Math.Max(parent.ClientSize.Width, 1),
+            Height = Math.Max(parent.ClientSize.Height, 1),
+            Margin = new Padding(0),
+        };
+
+        if (parent is FlowLayoutPanel)
+        {
+            panel.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom;
+        }
+
+        AddChild(parent, panel);
         controlsById[id] = panel;
     }
 
@@ -339,6 +372,40 @@ internal sealed class WindowsHostRuntime
         }
     }
 
+    private void SetGeometry(JsonObject message)
+    {
+        var id = GetString(message, "id");
+        if (string.IsNullOrWhiteSpace(id) || !controlsById.TryGetValue(id, out var control))
+        {
+            SendError("host", $"Componente nao encontrado: {id}");
+            return;
+        }
+
+        var hasX = TryGetInt(message, "x", out var x);
+        var hasY = TryGetInt(message, "y", out var y);
+        var hasWidth = TryGetInt(message, "largura", out var width);
+        var hasHeight = TryGetInt(message, "altura", out var height);
+
+        if (hasX || hasY)
+        {
+            if (control.Parent is not Panel || control.Parent is FlowLayoutPanel)
+            {
+                SendError("host", $"Posicionamento absoluto nao suportado para o componente: {id}");
+                return;
+            }
+
+            control.Left = hasX ? x : control.Left;
+            control.Top = hasY ? y : control.Top;
+        }
+
+        if (hasWidth || hasHeight)
+        {
+            control.AutoSize = false;
+            control.Width = hasWidth ? width : control.Width;
+            control.Height = hasHeight ? height : control.Height;
+        }
+    }
+
     private void CloseAll()
     {
         foreach (var form in formsById.Values)
@@ -351,7 +418,7 @@ internal sealed class WindowsHostRuntime
         Context.ExitThread();
     }
 
-    private FlowLayoutPanel? GetParent(string? parentId, string operation)
+    private Control? GetParent(string? parentId, string operation)
     {
         if (string.IsNullOrWhiteSpace(parentId) || !controlsById.TryGetValue(parentId, out var parent))
         {
@@ -359,7 +426,13 @@ internal sealed class WindowsHostRuntime
             return null;
         }
 
-        return parent as FlowLayoutPanel;
+        if (parent is FlowLayoutPanel || (parent is Panel && parent is not Form))
+        {
+            return parent;
+        }
+
+        SendError("host", $"Pai invalido para {operation}: {parentId}");
+        return null;
     }
 
     private string? GetString(JsonObject message, string key)
@@ -377,6 +450,31 @@ internal sealed class WindowsHostRuntime
         {
             return fallback;
         }
+    }
+
+    private bool TryGetInt(JsonObject message, string key, out int value)
+    {
+        value = 0;
+
+        try
+        {
+            if (message[key] is null)
+            {
+                return false;
+            }
+
+            value = message[key]!.GetValue<int>();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void AddChild(Control parent, Control child)
+    {
+        parent.Controls.Add(child);
     }
 
     private void SendError(string origin, string description)
