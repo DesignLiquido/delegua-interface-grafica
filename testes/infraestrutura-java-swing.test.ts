@@ -52,4 +52,41 @@ describe('InfraestruturaJavaSwing com host fake', () => {
 
         infraestrutura.encerrar();
     });
+
+    it('emite criar-caixa-livre e definir-geometria no protocolo do host', () => {
+        const infraestrutura = new InfraestruturaJavaSwing({
+            comando: process.execPath,
+            argumentos: [scriptHostFake],
+            tempoLimiteProntoMs: 2_000,
+        });
+
+        const espiarEnviar = jest.spyOn((infraestrutura as any).processo, 'enviar');
+
+        const janela = infraestrutura.criarJanela(640, 480, 'Teste');
+        const areaLivre = infraestrutura.criarCaixaLivre(janela);
+        const botao = infraestrutura.criarBotao(areaLivre, 'Posicionar');
+
+        infraestrutura.definirPosicao(botao, 40, 60);
+        infraestrutura.definirTamanho(botao, 120, 36);
+
+        expect(espiarEnviar).toHaveBeenCalledWith({
+            tipo: 'criar-caixa-livre',
+            id: areaLivre.idComponente,
+            paiId: janela.idComponente,
+        });
+        expect(espiarEnviar).toHaveBeenCalledWith({
+            tipo: 'definir-geometria',
+            id: botao.idComponente,
+            x: 40,
+            y: 60,
+        });
+        expect(espiarEnviar).toHaveBeenCalledWith({
+            tipo: 'definir-geometria',
+            id: botao.idComponente,
+            largura: 120,
+            altura: 36,
+        });
+
+        infraestrutura.encerrar();
+    });
 });

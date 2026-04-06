@@ -154,11 +154,11 @@ export class InfraestruturaJavaSwing implements InfraestruturaGraficaInterface {
     }
 
     definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
-        this.enviar({ tipo: 'definir-posicao', id: componente.idComponente, x, y });
+        this.enviar({ tipo: 'definir-geometria', id: componente.idComponente, x, y });
     }
 
     definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void {
-        this.enviar({ tipo: 'definir-tamanho', id: componente.idComponente, largura, altura });
+        this.enviar({ tipo: 'definir-geometria', id: componente.idComponente, largura, altura });
     }
 
     conectarEvento(

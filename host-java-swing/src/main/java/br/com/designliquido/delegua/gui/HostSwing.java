@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -38,7 +39,9 @@ public final class HostSwing {
         BufferedReader entrada = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
 
         HostSwing host = new HostSwing(saida);
-        host.enviar(host.mensagem("pronto"));
+        JsonObject pronto = host.mensagem("pronto");
+        pronto.addProperty("versao", "1.1.0-swing-host");
+        host.enviar(pronto);
 
         String linha;
         while ((linha = entrada.readLine()) != null) {
@@ -72,7 +75,9 @@ public final class HostSwing {
             case "criar-caixa-texto" -> criarCaixaTexto(mensagem);
             case "criar-caixa-vertical" -> criarCaixa(mensagem, true);
             case "criar-caixa-horizontal" -> criarCaixa(mensagem, false);
+            case "criar-caixa-livre" -> criarCaixaLivre(mensagem);
             case "definir-texto" -> definirTexto(mensagem);
+            case "definir-geometria" -> definirGeometria(mensagem);
             case "encerrar" -> encerrar();
             default -> enviar(erro("protocolo", "Tipo de mensagem nao suportado: " + tipo));
         }
@@ -133,9 +138,7 @@ public final class HostSwing {
             enviar(evento);
         });
 
-        pai.add(botao);
-        pai.revalidate();
-        pai.repaint();
+        adicionarAoPai(pai, botao);
         componentes.put(id, botao);
         enviar(recebido(mensagem));
     }
@@ -152,9 +155,7 @@ public final class HostSwing {
         }
 
         JLabel rotulo = new JLabel(texto);
-        pai.add(rotulo);
-        pai.revalidate();
-        pai.repaint();
+        adicionarAoPai(pai, rotulo);
         componentes.put(id, rotulo);
         enviar(recebido(mensagem));
     }
@@ -184,9 +185,7 @@ public final class HostSwing {
             enviar(evento);
         }));
 
-        pai.add(caixa);
-        pai.revalidate();
-        pai.repaint();
+        adicionarAoPai(pai, caixa);
         componentes.put(id, caixa);
         enviar(recebido(mensagem));
     }
@@ -204,9 +203,25 @@ public final class HostSwing {
         JPanel caixa = new JPanel();
         caixa.setLayout(new BoxLayout(caixa, vertical ? BoxLayout.Y_AXIS : BoxLayout.X_AXIS));
 
-        pai.add(caixa);
-        pai.revalidate();
-        pai.repaint();
+        adicionarAoPai(pai, caixa);
+        componentes.put(id, caixa);
+        enviar(recebido(mensagem));
+    }
+
+    private void criarCaixaLivre(JsonObject mensagem) {
+        String id = texto(mensagem, "id", "");
+        String paiId = texto(mensagem, "paiId", "");
+
+        Container pai = obterContainer(paiId);
+        if (pai == null) {
+            enviar(erro("host", "Pai nao encontrado para criar-caixa-livre: " + paiId));
+            return;
+        }
+
+        JPanel caixa = new JPanel(null);
+        caixa.setPreferredSize(new Dimension(Math.max(pai.getWidth(), 1), Math.max(pai.getHeight(), 1)));
+
+        adicionarAoPai(pai, caixa);
         componentes.put(id, caixa);
         enviar(recebido(mensagem));
     }
@@ -243,6 +258,47 @@ public final class HostSwing {
         enviar(recebido(mensagem));
     }
 
+    private void definirGeometria(JsonObject mensagem) {
+        String id = texto(mensagem, "id", "");
+        JComponent componente = componentes.get(id);
+        if (componente == null) {
+            enviar(erro("host", "Componente nao encontrado: " + id));
+            return;
+        }
+
+        boolean temX = mensagem.has("x") && !mensagem.get("x").isJsonNull();
+        boolean temY = mensagem.has("y") && !mensagem.get("y").isJsonNull();
+        boolean temLargura = mensagem.has("largura") && !mensagem.get("largura").isJsonNull();
+        boolean temAltura = mensagem.has("altura") && !mensagem.get("altura").isJsonNull();
+
+        int x = inteiro(mensagem, "x", componente.getX());
+        int y = inteiro(mensagem, "y", componente.getY());
+        int larguraAtual = componente.getWidth() > 0 ? componente.getWidth() : componente.getPreferredSize().width;
+        int alturaAtual = componente.getHeight() > 0 ? componente.getHeight() : componente.getPreferredSize().height;
+        int largura = inteiro(mensagem, "largura", Math.max(larguraAtual, 1));
+        int altura = inteiro(mensagem, "altura", Math.max(alturaAtual, 1));
+
+        if (temX || temY) {
+            Container pai = componente.getParent();
+            if (!(pai instanceof JPanel painelPai) || painelPai.getLayout() != null) {
+                enviar(erro("host", "Posicionamento absoluto nao suportado para o componente: " + id));
+                return;
+            }
+
+            componente.setBounds(x, y, largura, altura);
+        } else if (temLargura || temAltura) {
+            componente.setPreferredSize(new Dimension(largura, altura));
+            componente.setSize(largura, altura);
+        }
+
+        if (componente.getParent() != null) {
+            componente.getParent().revalidate();
+            componente.getParent().repaint();
+        }
+
+        enviar(recebido(mensagem));
+    }
+
     private void encerrar() {
         for (JFrame frame : janelas.values()) {
             frame.dispose();
@@ -264,6 +320,12 @@ public final class HostSwing {
         }
 
         return componente;
+    }
+
+    private void adicionarAoPai(Container pai, JComponent filho) {
+        pai.add(filho);
+        pai.revalidate();
+        pai.repaint();
     }
 
     private JsonObject recebido(JsonObject original) {
