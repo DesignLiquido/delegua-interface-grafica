@@ -64,6 +64,13 @@ describe('InterfaceGrafica com InfraestruturaVazia', () => {
             expect(caixa.idComponente).toBeTruthy();
         });
 
+        it('caixaLivre retorna um componente com idComponente', () => {
+            const janela = ig.janela(interpretadorFalso, 800, 600, 'Teste');
+            const caixa = ig.caixaLivre(interpretadorFalso, janela);
+            expect(caixa).toBeDefined();
+            expect(caixa.idComponente).toBeTruthy();
+        });
+
         it('cada componente recebe um idComponente único', () => {
             const janela = ig.janela(interpretadorFalso, 800, 600, 'Teste');
             const botao1 = ig.botao(interpretadorFalso, janela, 'Botão 1');
@@ -124,6 +131,28 @@ describe('InterfaceGrafica com InfraestruturaVazia', () => {
         });
     });
 
+    describe('geometria', () => {
+        it('definirPosicao registra coordenadas no backend', () => {
+            const janela = ig.janela(interpretadorFalso, 800, 600, 'Teste');
+            const areaLivre = ig.caixaLivre(interpretadorFalso, janela);
+            const botao = ig.botao(interpretadorFalso, areaLivre, 'OK');
+
+            ig.definirPosicao(interpretadorFalso, botao, 40, 60);
+
+            expect(infraestrutura.obterGeometria(botao)).toEqual({ x: 40, y: 60 });
+        });
+
+        it('definirTamanho registra largura e altura no backend', () => {
+            const janela = ig.janela(interpretadorFalso, 800, 600, 'Teste');
+            const areaLivre = ig.caixaLivre(interpretadorFalso, janela);
+            const botao = ig.botao(interpretadorFalso, areaLivre, 'OK');
+
+            ig.definirTamanho(interpretadorFalso, botao, 120, 36);
+
+            expect(infraestrutura.obterGeometria(botao)).toEqual({ largura: 120, altura: 36 });
+        });
+    });
+
     describe('ciclo de vida', () => {
         it('iniciar resolve sem erros', async () => {
             await expect(ig.iniciar(interpretadorFalso)).resolves.toBeUndefined();
@@ -155,5 +184,21 @@ describe('InfraestruturaVazia isolado', () => {
 
     it('iniciarLaco resolve imediatamente', async () => {
         await expect(infraestrutura.iniciarLaco()).resolves.toBeUndefined();
+    });
+
+    it('preserva geometria configurada em memoria', () => {
+        const janela = infraestrutura.criarJanela(800, 600, 'Teste');
+        const areaLivre = infraestrutura.criarCaixaLivre(janela);
+        const botao = infraestrutura.criarBotao(areaLivre, 'OK');
+
+        infraestrutura.definirPosicao(botao, 10, 20);
+        infraestrutura.definirTamanho(botao, 150, 45);
+
+        expect(infraestrutura.obterGeometria(botao)).toEqual({
+            x: 10,
+            y: 20,
+            largura: 150,
+            altura: 45,
+        });
     });
 });

@@ -217,6 +217,10 @@ export class InfraestruturaElectron implements InfraestruturaGraficaInterface {
         const caixa = document.createElement('div');
         Object.assign(caixa.style, {
             position: 'relative',
+            width: '100%',
+            minHeight: '100%',
+            flex: '1 1 auto',
+            boxSizing: 'border-box',
         });
         elementoPai.appendChild(caixa);
         return this.registrar(caixa);
@@ -245,6 +249,7 @@ export class InfraestruturaElectron implements InfraestruturaGraficaInterface {
 
     definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
         const elemento = this.obterElemento(componente);
+        elemento.style.position = 'absolute';
         elemento.style.left = `${x}px`;
         elemento.style.top = `${y}px`;
     }

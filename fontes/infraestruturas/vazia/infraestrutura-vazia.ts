@@ -68,6 +68,15 @@ export class InfraestruturaVazia implements InfraestruturaGraficaInterface {
         this.geometrias.set(componente.idComponente, { ...geometriaAtual, largura, altura });
     }
 
+    obterGeometria(componente: ComponenteInterfaceGraficaInterface): {
+        x?: number;
+        y?: number;
+        largura?: number;
+        altura?: number;
+    } {
+        return this.geometrias.get(componente.idComponente) ?? {};
+    }
+
     conectarEvento(
         _componente: ComponenteInterfaceGraficaInterface,
         _evento: string,

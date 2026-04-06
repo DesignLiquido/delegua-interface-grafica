@@ -138,6 +138,12 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
             gap: 8px;
             align-items: center;
         }
+        .delegua-caixa-livre {
+            position: relative;
+            width: 100%;
+            min-height: 100%;
+            flex: 1 1 auto;
+        }
         .delegua-botao {
             padding: 6px 16px;
             font-size: 13px;
@@ -248,7 +254,7 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
                 }
                 case 'criar-caixa-livre': {
                     const div = document.createElement('div');
-                    div.style.position = 'relative';
+                    div.className = 'delegua-caixa-livre';
                     elementos[msg.paiId].appendChild(div);
                     elementos[msg.id] = div;
                     break;
@@ -261,19 +267,24 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
                     }
                     break;
                 }
-                case 'definir-posicao': {
+                case 'definir-geometria': {
                     const el = elementos[msg.id];
                     if (el) {
-                        el.style.left = msg.x + 'px';
-                        el.style.top = msg.y + 'px';
-                    }
-                    break;
-                }
-                case 'definir-tamanho': {
-                    const el = elementos[msg.id];
-                    if (el) {
-                        el.style.width = msg.largura + 'px';
-                        el.style.height = msg.altura + 'px';
+                        if (msg.x !== undefined || msg.y !== undefined) {
+                            el.style.position = 'absolute';
+                        }
+                        if (msg.x !== undefined) {
+                            el.style.left = msg.x + 'px';
+                        }
+                        if (msg.y !== undefined) {
+                            el.style.top = msg.y + 'px';
+                        }
+                        if (msg.largura !== undefined) {
+                            el.style.width = msg.largura + 'px';
+                        }
+                        if (msg.altura !== undefined) {
+                            el.style.height = msg.altura + 'px';
+                        }
                     }
                     break;
                 }
@@ -358,11 +369,11 @@ export class InfraestruturaWebView implements InfraestruturaGraficaInterface {
     }
 
     definirPosicao(componente: ComponenteInterfaceGraficaInterface, x: number, y: number): void {
-        this._enviar({ tipo: 'definir-posicao', id: componente.idComponente, x, y });
+        this._enviar({ tipo: 'definir-geometria', id: componente.idComponente, x, y });
     }
 
     definirTamanho(componente: ComponenteInterfaceGraficaInterface, largura: number, altura: number): void {
-        this._enviar({ tipo: 'definir-tamanho', id: componente.idComponente, largura, altura });
+        this._enviar({ tipo: 'definir-geometria', id: componente.idComponente, largura, altura });
     }
 
     // -------------------------------------------------------------------------
