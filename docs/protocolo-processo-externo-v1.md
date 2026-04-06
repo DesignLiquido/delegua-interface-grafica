@@ -13,6 +13,8 @@ Definir o contrato de comunicacao entre a biblioteca delegua-interface-grafica (
 - Campos adicionais sao permitidos, desde que nao conflitem com os campos definidos por mensagem.
 - O host deve enviar `pronto` assim que estiver apto a receber comandos.
 - Mensagens enviadas pelo TypeScript antes de `pronto` podem ser enfileiradas.
+- Coordenadas e dimensoes sao expressas em pixels quando aplicaveis.
+- Posicionamento absoluto so e garantido para componentes filhos de `caixaLivre`.
 
 ## Handshake
 ### Host -> TS
@@ -55,10 +57,32 @@ Campos:
 { "tipo": "criar-caixa-horizontal", "id": "delegua-gui-6", "paiId": "delegua-gui-1" }
 ```
 
+### criar-caixa-livre
+```json
+{ "tipo": "criar-caixa-livre", "id": "delegua-gui-7", "paiId": "delegua-gui-1" }
+```
+
 ### definir-texto
 ```json
 { "tipo": "definir-texto", "id": "delegua-gui-4", "texto": "novo valor" }
 ```
+
+### definir-geometria
+```json
+{ "tipo": "definir-geometria", "id": "delegua-gui-8", "x": 40, "y": 60, "largura": 120, "altura": 36 }
+```
+
+Campos:
+- `id`: obrigatorio, identifica o componente a ser atualizado.
+- `x`: opcional, coordenada horizontal relativa ao pai.
+- `y`: opcional, coordenada vertical relativa ao pai.
+- `largura`: opcional, largura do componente em pixels.
+- `altura`: opcional, altura do componente em pixels.
+
+Regras:
+- O host deve aceitar atualizacoes parciais; por exemplo, apenas `x` e `y`, ou apenas `largura` e `altura`.
+- Quando `x` ou `y` forem informados, o host deve tratar o componente como participante de layout absoluto.
+- Se a geometria recebida nao puder ser aplicada no componente ou no pai atual, o host deve emitir `erro`.
 
 ### encerrar
 ```json
@@ -104,10 +128,15 @@ Campos:
 ## Compatibilidade de Versao
 - Este documento define a versao `v1` do protocolo.
 - Alteracoes incompativeis devem gerar uma nova versao maior do protocolo.
-- Alteracoes compativeis (adicao de campos opcionais) sao permitidas dentro da mesma versao maior.
+- Alteracoes compativeis sao permitidas dentro da mesma versao maior, incluindo:
+  - adicao de campos opcionais;
+  - adicao de novos tipos de mensagem.
+- Hosts que implementarem extensoes de geometria podem anunciar uma versao textual mais especifica, como `1.1.0-*`, para facilitar diagnostico.
 
 ## Recomendacoes de Robustez para Hosts
 - Nunca emitir logs de diagnostico em stdout fora do formato JSON.
 - Emitir logs de depuracao em stderr.
 - Em caso de erro recuperavel, emitir `erro` e continuar quando possivel.
 - Em caso de erro fatal, emitir `erro` seguido de encerramento limpo.
+- Validar `id`, `paiId` e campos numericos recebidos antes de aplicar alteracoes visuais.
+- Para `definir-geometria`, preferir mensagens de erro explicitas a falhas silenciosas.

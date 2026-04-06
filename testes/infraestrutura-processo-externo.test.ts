@@ -73,4 +73,48 @@ describe('InfraestruturaProcessoExterno', () => {
 
         infraestrutura.encerrar();
     });
+
+    it('transporta criar-caixa-livre e definir-geometria conforme o protocolo', async () => {
+        const infraestrutura = new InfraestruturaProcessoExterno({
+            comando: process.execPath,
+            argumentos: [scriptHostFake],
+            tempoLimiteProntoMs: 2_000,
+        });
+
+        const aguardandoCaixaLivre = aguardarMensagem(infraestrutura, 'recebido');
+        infraestrutura.enviar({
+            tipo: 'criar-caixa-livre',
+            id: 'delegua-gui-10',
+            paiId: 'delegua-gui-1',
+        });
+
+        const caixaLivreRecebida = await aguardandoCaixaLivre;
+        expect(caixaLivreRecebida.payload).toEqual({
+            tipo: 'criar-caixa-livre',
+            id: 'delegua-gui-10',
+            paiId: 'delegua-gui-1',
+        });
+
+        const aguardandoGeometria = aguardarMensagem(infraestrutura, 'recebido');
+        infraestrutura.enviar({
+            tipo: 'definir-geometria',
+            id: 'delegua-gui-11',
+            x: 40,
+            y: 60,
+            largura: 120,
+            altura: 36,
+        });
+
+        const geometriaRecebida = await aguardandoGeometria;
+        expect(geometriaRecebida.payload).toEqual({
+            tipo: 'definir-geometria',
+            id: 'delegua-gui-11',
+            x: 40,
+            y: 60,
+            largura: 120,
+            altura: 36,
+        });
+
+        infraestrutura.encerrar();
+    });
 });

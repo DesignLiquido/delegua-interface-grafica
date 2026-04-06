@@ -1,6 +1,7 @@
 const readline = require('readline');
 
 const textos = new Map();
+const geometrias = new Map();
 
 function enviar(mensagem) {
     if (!process.stdout.writable) {
@@ -53,6 +54,17 @@ leitor.on('line', (linha) => {
             componenteId: mensagem.id,
             evento: 'alterado',
             valor: mensagem.texto ?? '',
+        });
+    }
+
+    if (mensagem.tipo === 'definir-geometria' && mensagem.id) {
+        const geometriaAtual = geometrias.get(mensagem.id) ?? {};
+        geometrias.set(mensagem.id, {
+            ...geometriaAtual,
+            ...(mensagem.x !== undefined ? { x: mensagem.x } : {}),
+            ...(mensagem.y !== undefined ? { y: mensagem.y } : {}),
+            ...(mensagem.largura !== undefined ? { largura: mensagem.largura } : {}),
+            ...(mensagem.altura !== undefined ? { altura: mensagem.altura } : {}),
         });
     }
 
