@@ -9,7 +9,8 @@
         "declarationMap": true,
         "esModuleInterop": true,
         "lib": ["es2017", "dom"],
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "types": ["node", "jest"]
     },
     "include": [
         "fontes/**/*",

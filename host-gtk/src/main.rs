@@ -1,5 +1,5 @@
 use gtk4::prelude::*;
-use gtk4::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Label, Orientation, Widget};
+use gtk4::{Application, ApplicationWindow, Box as GtkBox, Button, Entry, Fixed, Label, Orientation, Widget};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -43,6 +43,31 @@ impl Runtime {
         })
     }
 
+    fn get_parent_widget(&self, parent_id: &str, operation: &str) -> Option<Widget> {
+        let components = self.components.borrow();
+        let Some(widget) = components.get(parent_id) else {
+            self.send_error("host", &format!("Pai nao encontrado para {}: {}", operation, parent_id));
+            return None;
+        };
+
+        Some(widget.clone())
+    }
+
+    fn add_child(&self, parent: &Widget, child: &impl IsA<Widget>, operation: &str) -> bool {
+        if let Ok(container) = parent.clone().downcast::<GtkBox>() {
+            container.append(child);
+            return true;
+        }
+
+        if let Ok(container) = parent.clone().downcast::<Fixed>() {
+            container.put(child, 0.0, 0.0);
+            return true;
+        }
+
+        self.send_error("host", &format!("Pai invalido para {}.", operation));
+        false
+    }
+
     fn process_message(&self, app: &Application, message: Value) {
         let tipo = message
             .get("tipo")
@@ -56,7 +81,9 @@ impl Runtime {
             "criar-caixa-texto" => self.create_textbox(&message),
             "criar-caixa-vertical" => self.create_box(&message, Orientation::Vertical),
             "criar-caixa-horizontal" => self.create_box(&message, Orientation::Horizontal),
+            "criar-caixa-livre" => self.create_free_box(&message),
             "definir-texto" => self.set_text(&message),
+            "definir-geometria" => self.set_geometry(&message),
             "encerrar" => self.close_all(app),
             _ => self.send_error("protocolo", &format!("Tipo de mensagem nao suportado: {}", tipo)),
         }
@@ -139,7 +166,9 @@ impl Runtime {
             }));
         });
 
-        parent.append(&button);
+        if !self.add_child(&parent.upcast::<Widget>(), &button, "criar-botao") {
+            return;
+        }
         self.components
             .borrow_mut()
             .insert(id.to_string(), button.upcast::<Widget>());
@@ -161,7 +190,9 @@ impl Runtime {
 
         let label = Label::new(Some(text));
         label.set_xalign(0.0);
-        parent.append(&label);
+        if !self.add_child(&parent.upcast::<Widget>(), &label, "criar-rotulo") {
+            return;
+        }
         self.components
             .borrow_mut()
             .insert(id.to_string(), label.upcast::<Widget>());
@@ -206,7 +237,9 @@ impl Runtime {
             }));
         });
 
-        parent.append(&entry);
+        if !self.add_child(&parent.upcast::<Widget>(), &entry, "criar-caixa-texto") {
+            return;
+        }
         self.components
             .borrow_mut()
             .insert(id.to_string(), entry.upcast::<Widget>());
@@ -232,7 +265,35 @@ impl Runtime {
         };
 
         let container = GtkBox::new(orientation, 8);
-        parent.append(&container);
+        if !self.add_child(&parent.upcast::<Widget>(), &container, op) {
+            return;
+        }
+        self.components
+            .borrow_mut()
+            .insert(id.to_string(), container.upcast::<Widget>());
+    }
+
+    fn create_free_box(&self, message: &Value) {
+        let id = message.get("id").and_then(Value::as_str).unwrap_or_default();
+        let parent_id = message.get("paiId").and_then(Value::as_str).unwrap_or_default();
+
+        if id.is_empty() {
+            self.send_error("protocolo", "criar-caixa-livre sem id");
+            return;
+        }
+
+        let Some(parent) = self.get_parent_widget(parent_id, "criar-caixa-livre") else {
+            return;
+        };
+
+        let container = Fixed::new();
+        container.set_hexpand(true);
+        container.set_vexpand(true);
+
+        if !self.add_child(&parent, &container, "criar-caixa-livre") {
+            return;
+        }
+
         self.components
             .borrow_mut()
             .insert(id.to_string(), container.upcast::<Widget>());
@@ -273,6 +334,48 @@ impl Runtime {
         }
     }
 
+    fn set_geometry(&self, message: &Value) {
+        let id = message.get("id").and_then(Value::as_str).unwrap_or_default();
+
+        if id.is_empty() {
+            self.send_error("protocolo", "definir-geometria sem id");
+            return;
+        }
+
+        let widget = {
+            let components = self.components.borrow();
+            let Some(widget) = components.get(id) else {
+                self.send_error("host", &format!("Componente nao encontrado: {}", id));
+                return;
+            };
+
+            widget.clone()
+        };
+
+        let x = message.get("x").and_then(Value::as_i64).map(|v| v as f64);
+        let y = message.get("y").and_then(Value::as_i64).map(|v| v as f64);
+        let largura = message.get("largura").and_then(Value::as_i64).map(|v| v as i32);
+        let altura = message.get("altura").and_then(Value::as_i64).map(|v| v as i32);
+
+        if x.is_some() || y.is_some() {
+            let Some(parent) = widget.parent() else {
+                self.send_error("host", &format!("Componente sem pai para geometria: {}", id));
+                return;
+            };
+
+            let Ok(container) = parent.downcast::<Fixed>() else {
+                self.send_error("host", &format!("Posicionamento absoluto nao suportado para o componente: {}", id));
+                return;
+            };
+
+            container.move_(&widget, x.unwrap_or(0.0), y.unwrap_or(0.0));
+        }
+
+        if largura.is_some() || altura.is_some() {
+            widget.set_size_request(largura.unwrap_or(-1), altura.unwrap_or(-1));
+        }
+    }
+
     fn close_all(&self, app: &Application) {
         for window in self.windows.borrow().values() {
             window.close();
@@ -300,7 +403,7 @@ fn main() {
 
         runtime.send(json!({
             "tipo": "pronto",
-            "versao": "1.0.0-gtk-host",
+            "versao": "1.1.0-gtk-host",
         }));
 
         let (sender, receiver) = gtk4::glib::MainContext::channel::<Value>(gtk4::glib::Priority::default());
