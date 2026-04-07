@@ -84,7 +84,9 @@ final class MacOSHostRuntime {
         case "criar-caixa-texto":     createTextField(message)
         case "criar-caixa-vertical":  createStack(message, vertical: true)
         case "criar-caixa-horizontal": createStack(message, vertical: false)
+        case "criar-caixa-livre":     createFreeView(message)
         case "definir-texto":         setText(message)
+        case "definir-geometria":     setGeometry(message)
         case "encerrar":              closeAll()
         default:
             OutputWriter.shared.sendError(origem: "protocolo", mensagem: "Tipo de mensagem não suportado: \(tipo)")
@@ -127,10 +129,33 @@ final class MacOSHostRuntime {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    private func parentView(_ parentId: String?, operation: String) -> NSView? {
+        guard let parentId, let parent = viewsById[parentId] else {
+            OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para \(operation): \(parentId ?? "nil")")
+            return nil
+        }
+
+        return parent
+    }
+
+    private func addChild(_ child: NSView, to parent: NSView, operation: String) -> Bool {
+        if let stack = parent as? NSStackView {
+            stack.addArrangedSubview(child)
+            return true
+        }
+
+        if parent is NSView {
+            parent.addSubview(child)
+            return true
+        }
+
+        OutputWriter.shared.sendError(origem: "host", mensagem: "Pai inválido para \(operation)")
+        return false
+    }
+
     private func createButton(_ msg: [String: Any]) {
         guard let id       = msg["id"]    as? String,
-              let parentId = msg["paiId"] as? String,
-              let parent   = viewsById[parentId] as? NSStackView
+              let parent   = parentView(msg["paiId"] as? String, operation: "criar-botao")
         else {
             OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para criar-botao: \(msg["paiId"] ?? "nil")")
             return
@@ -147,14 +172,13 @@ final class MacOSHostRuntime {
         button.action = #selector(ButtonTarget.fire)
         retained["target-\(id)"] = target
 
-        parent.addArrangedSubview(button)
+        guard addChild(button, to: parent, operation: "criar-botao") else { return }
         viewsById[id] = button
     }
 
     private func createLabel(_ msg: [String: Any]) {
         guard let id       = msg["id"]    as? String,
-              let parentId = msg["paiId"] as? String,
-              let parent   = viewsById[parentId] as? NSStackView
+              let parent   = parentView(msg["paiId"] as? String, operation: "criar-rotulo")
         else {
             OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para criar-rotulo: \(msg["paiId"] ?? "nil")")
             return
@@ -162,14 +186,13 @@ final class MacOSHostRuntime {
 
         let texto = (msg["texto"] as? String) ?? ""
         let label = NSTextField(labelWithString: texto)
-        parent.addArrangedSubview(label)
+        guard addChild(label, to: parent, operation: "criar-rotulo") else { return }
         viewsById[id] = label
     }
 
     private func createTextField(_ msg: [String: Any]) {
         guard let id       = msg["id"]    as? String,
-              let parentId = msg["paiId"] as? String,
-              let parent   = viewsById[parentId] as? NSStackView
+              let parent   = parentView(msg["paiId"] as? String, operation: "criar-caixa-texto")
         else {
             OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para criar-caixa-texto: \(msg["paiId"] ?? "nil")")
             return
@@ -183,15 +206,14 @@ final class MacOSHostRuntime {
         field.delegate = delegate
         retained["delegate-\(id)"] = delegate
 
-        parent.addArrangedSubview(field)
+        guard addChild(field, to: parent, operation: "criar-caixa-texto") else { return }
         viewsById[id] = field
     }
 
     private func createStack(_ msg: [String: Any], vertical: Bool) {
         let op = vertical ? "criar-caixa-vertical" : "criar-caixa-horizontal"
         guard let id       = msg["id"]    as? String,
-              let parentId = msg["paiId"] as? String,
-              let parent   = viewsById[parentId] as? NSStackView
+              let parent   = parentView(msg["paiId"] as? String, operation: op)
         else {
             OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para \(op): \(msg["paiId"] ?? "nil")")
             return
@@ -202,8 +224,24 @@ final class MacOSHostRuntime {
         stack.alignment   = vertical ? .leading  : .centerY
         stack.spacing     = 8
 
-        parent.addArrangedSubview(stack)
+        guard addChild(stack, to: parent, operation: op) else { return }
         viewsById[id] = stack
+    }
+
+    private func createFreeView(_ msg: [String: Any]) {
+        guard let id = msg["id"] as? String,
+              let parent = parentView(msg["paiId"] as? String, operation: "criar-caixa-livre")
+        else {
+            OutputWriter.shared.sendError(origem: "host", mensagem: "Pai não encontrado para criar-caixa-livre: \(msg["paiId"] ?? "nil")")
+            return
+        }
+
+        let freeView = NSView(frame: NSRect(x: 0, y: 0, width: max(parent.bounds.width, 1), height: max(parent.bounds.height, 1)))
+        freeView.translatesAutoresizingMaskIntoConstraints = true
+        freeView.autoresizingMask = [.width, .height]
+
+        guard addChild(freeView, to: parent, operation: "criar-caixa-livre") else { return }
+        viewsById[id] = freeView
     }
 
     private func setText(_ msg: [String: Any]) {
@@ -227,6 +265,45 @@ final class MacOSHostRuntime {
         }
     }
 
+    private func setGeometry(_ msg: [String: Any]) {
+        guard let id = msg["id"] as? String,
+              let view = viewsById[id]
+        else {
+            OutputWriter.shared.sendError(origem: "host", mensagem: "Componente não encontrado: \(msg["id"] ?? "nil")")
+            return
+        }
+
+        let x = msg["x"] as? CGFloat
+        let y = msg["y"] as? CGFloat
+        let largura = msg["largura"] as? CGFloat
+        let altura = msg["altura"] as? CGFloat
+
+        if x != nil || y != nil {
+            guard let parent = view.superview, !(parent is NSStackView) else {
+                OutputWriter.shared.sendError(origem: "host", mensagem: "Posicionamento absoluto não suportado para o componente: \(id)")
+                return
+            }
+
+            var frame = view.frame
+            frame.origin.x = x ?? frame.origin.x
+            frame.origin.y = y ?? frame.origin.y
+            if frame.size.width <= 0 {
+                frame.size.width = max(view.fittingSize.width, 1)
+            }
+            if frame.size.height <= 0 {
+                frame.size.height = max(view.fittingSize.height, 1)
+            }
+            view.frame = frame
+        }
+
+        if largura != nil || altura != nil {
+            var frame = view.frame
+            frame.size.width = largura ?? max(frame.size.width, view.fittingSize.width, 1)
+            frame.size.height = altura ?? max(frame.size.height, view.fittingSize.height, 1)
+            view.frame = frame
+        }
+    }
+
     func closeAll() {
         for (_, window) in windowsById { window.close() }
         windowsById.removeAll()
@@ -242,7 +319,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let runtime = MacOSHostRuntime()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        OutputWriter.shared.send(["tipo": "pronto", "versao": "1.0.0-macos-host"])
+        OutputWriter.shared.send(["tipo": "pronto", "versao": "1.1.0-macos-host"])
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             while let line = readLine() {
