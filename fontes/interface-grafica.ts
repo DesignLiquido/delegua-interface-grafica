@@ -1,4 +1,4 @@
-import { InterpretadorInterface } from '@designliquido/delegua';
+import { InterpretadorInterface } from '@designliquido/delegua/interfaces';
 import { InfraestruturaGraficaInterface } from './interfaces/infraestrutura-grafica-interface';
 import { ComponenteInterfaceGraficaInterface } from './interfaces/componente-interface-grafica-interface';
 

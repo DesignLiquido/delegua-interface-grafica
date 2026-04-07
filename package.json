@@ -36,6 +36,7 @@
         "@designliquido/delegua": ">=1.15.1"
     },
     "devDependencies": {
+        "@designliquido/delegua": "^1.16.0",
         "@types/jest": "^29.5.14",
         "@types/node": "^25.5.2",
         "copyfiles": "^2.4.1",
