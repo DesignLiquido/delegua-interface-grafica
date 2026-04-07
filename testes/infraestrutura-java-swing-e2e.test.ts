@@ -32,7 +32,7 @@ const caminhoJar = process.env.DELEGUA_SWING_E2E_JAR;
 const descreverE2E = executarE2E && caminhoJar ? describe : describe.skip;
 
 descreverE2E('InfraestruturaJavaSwing E2E com host real', () => {
-    it('consegue inicializar, enviar comandos e receber evento alterado', async () => {
+    it('consegue inicializar, aplicar geometria e receber evento alterado', async () => {
         const infraestrutura = new InfraestruturaJavaSwing({
             comando: process.env.DELEGUA_SWING_E2E_COMANDO ?? 'java',
             argumentos: ['-jar', caminhoJar!],
@@ -41,7 +41,14 @@ descreverE2E('InfraestruturaJavaSwing E2E com host real', () => {
 
         try {
             const janela = infraestrutura.criarJanela(480, 300, 'E2E Swing');
-            const caixa = infraestrutura.criarCaixaTexto(janela, '');
+            const areaLivre = infraestrutura.criarCaixaLivre(janela);
+            const caixa = infraestrutura.criarCaixaTexto(areaLivre, '');
+            const botao = infraestrutura.criarBotao(areaLivre, 'Enviar');
+
+            infraestrutura.definirPosicao(caixa, 24, 32);
+            infraestrutura.definirTamanho(caixa, 220, 32);
+            infraestrutura.definirPosicao(botao, 24, 80);
+            infraestrutura.definirTamanho(botao, 120, 36);
 
             const callbackAlterado = jest.fn().mockResolvedValue(undefined);
             infraestrutura.conectarEvento(caixa, 'alterado', callbackAlterado);

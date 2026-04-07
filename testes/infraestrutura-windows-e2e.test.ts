@@ -32,7 +32,7 @@ const caminhoExecutavel = process.env.DELEGUA_WINDOWS_E2E_EXE;
 const descreverE2E = executarE2E && caminhoExecutavel ? describe : describe.skip;
 
 descreverE2E('InfraestruturaWindows E2E com host real', () => {
-    it('consegue inicializar, enviar comandos e receber evento alterado', async () => {
+    it('consegue inicializar, aplicar geometria e receber evento alterado', async () => {
         const infraestrutura = new InfraestruturaWindows({
             comando: caminhoExecutavel!,
             tempoLimiteProntoMs: 10_000,
@@ -40,7 +40,14 @@ descreverE2E('InfraestruturaWindows E2E com host real', () => {
 
         try {
             const janela = infraestrutura.criarJanela(480, 300, 'E2E Windows');
-            const caixa = infraestrutura.criarCaixaTexto(janela, '');
+            const areaLivre = infraestrutura.criarCaixaLivre(janela);
+            const caixa = infraestrutura.criarCaixaTexto(areaLivre, '');
+            const botao = infraestrutura.criarBotao(areaLivre, 'Enviar');
+
+            infraestrutura.definirPosicao(caixa, 24, 32);
+            infraestrutura.definirTamanho(caixa, 220, 32);
+            infraestrutura.definirPosicao(botao, 24, 80);
+            infraestrutura.definirTamanho(botao, 120, 36);
 
             const callbackAlterado = jest.fn().mockResolvedValue(undefined);
             infraestrutura.conectarEvento(caixa, 'alterado', callbackAlterado);
