@@ -19,6 +19,18 @@ A especificacao do protocolo esta em:
 
 - ../docs/protocolo-processo-externo-v1.md
 
+## Suporte atual
+
+- componentes basicos: janela, botao, rotulo, caixa de texto;
+- layouts de fluxo com `FlowLayoutPanel`;
+- layout livre com `Panel` via `criar-caixa-livre`;
+- geometria com `definir-geometria`.
+
+## Limitacoes
+
+- posicionamento absoluto e garantido apenas para filhos de `caixaLivre`;
+- componentes com `AutoSize` sao convertidos para tamanho explicito quando `definir-geometria` informa largura/altura.
+
 ## Integracao com o backend TypeScript
 Exemplo de variaveis de ambiente para usar este host:
 
@@ -27,4 +39,4 @@ $env:DELEGUA_INTERFACE_GRAFICA_BACKEND='windows'
 $env:DELEGUA_INTERFACE_GRAFICA_WINDOWS_COMANDO='C:\caminho\para\DeleguaInterfaceGraficaWindowsHost.exe'
 ```
 
-Nota: este host esta em estado inicial e deve evoluir junto com o protocolo.
+Nota: este host continua experimental e deve evoluir junto com o protocolo.

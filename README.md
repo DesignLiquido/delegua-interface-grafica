@@ -2,7 +2,7 @@
 
 Biblioteca de interface gráfica para a linguagem [Delégua](https://github.com/DesignLiquido/delegua).
 
-Permite criar janelas, botões, rótulos, caixas de texto e contêineres de layout diretamente em código Delégua, com suporte a eventos como cliques e alterações de texto.
+Permite criar janelas, botões, rótulos, caixas de texto e contêineres de layout diretamente em código Delégua, com suporte a eventos como cliques e alterações de texto. Também oferece layout livre com coordenadas absolutas e dimensionamento explícito de componentes.
 
 ## Instalação
 
@@ -12,7 +12,7 @@ npm install @designliquido/delegua-interface-grafica
 
 ## Uso em código Delégua
 
-```
+```delegua
 var ig = importar("interfaceGrafica")
 
 var janela = ig.janela(800, 600, "Meu Programa")
@@ -29,6 +29,31 @@ ig.aoClicar(botao, aoClicar)
 ig.iniciar()
 ```
 
+## Layouts disponíveis
+
+- `caixaVertical(pai)` e `caixaHorizontal(pai)` mantêm o modelo de fluxo/empilhamento.
+- `caixaLivre(pai)` cria uma área de layout absoluto para posicionar componentes com `x` e `y`.
+- `definirPosicao(componente, x, y)` e `definirTamanho(componente, largura, altura)` usam pixels.
+
+Exemplo com geometria:
+
+```delegua
+var ig = importar("interfaceGrafica")
+
+var janela = ig.janela(800, 600, "Layout Livre")
+var areaLivre = ig.caixaLivre(janela)
+
+var caixa = ig.caixaTexto(areaLivre, "")
+var botao = ig.botao(areaLivre, "Confirmar")
+
+ig.definirPosicao(caixa, 24, 32)
+ig.definirTamanho(caixa, 220, 32)
+ig.definirPosicao(botao, 24, 80)
+ig.definirTamanho(botao, 120, 36)
+
+ig.iniciar()
+```
+
 ## Métodos disponíveis
 
 | Método | Descrição |
@@ -39,12 +64,21 @@ ig.iniciar()
 | `caixaTexto(pai, textoInicial?)` | Cria uma caixa de texto editável. |
 | `caixaVertical(pai)` | Cria um contêiner com layout vertical (de cima para baixo). |
 | `caixaHorizontal(pai)` | Cria um contêiner com layout horizontal (da esquerda para direita). |
+| `caixaLivre(pai)` | Cria um contêiner com layout livre para posicionamento por coordenadas. |
 | `definirTexto(componente, texto)` | Altera o texto de um rótulo ou caixa de texto. |
 | `obterTexto(componente)` | Lê o texto atual de um rótulo ou caixa de texto. |
+| `definirPosicao(componente, x, y)` | Define a posição do componente em pixels. |
+| `definirTamanho(componente, largura, altura)` | Define largura e altura do componente em pixels. |
 | `aoClicar(componente, funcao)` | Registra uma função a ser chamada ao clicar no componente. |
 | `aoAlterar(componente, funcao)` | Registra uma função a ser chamada quando o texto do componente mudar. A função recebe o novo texto como argumento. |
 | `iniciar()` | Inicia o laço de eventos. Bloqueia até a janela ser fechada. |
 | `encerrar()` | Encerra a interface gráfica e fecha todas as janelas. |
+
+## Regras de geometria
+
+- Posicionamento absoluto é garantido para componentes cujo pai imediato seja uma `caixaLivre`.
+- `x`, `y`, `largura` e `altura` são interpretados em pixels.
+- Em backends nativos, tentativas de posicionar um componente em um contêiner de fluxo podem resultar em erro explícito do host.
 
 ## Arquitetura
 
@@ -58,11 +92,12 @@ A biblioteca é dividida em duas camadas:
 | Classe | Ambiente | Descrição |
 |--------|----------|-----------|
 | `InfraestruturaElectron` | Processo renderer do Electron | Cria elementos DOM diretamente no `document.body` da janela Electron. Selecionada automaticamente quando `document` está disponível. |
-| `InfraestruturaGtk` *(experimental)* | Node.js + host GTK externo | Encaminha comandos de UI para um processo externo GTK via JSON em stdin/stdout. Recomendado para ambientes Linux-first. |
-| `InfraestruturaJavaSwing` *(experimental)* | Node.js + host Java externo | Encaminha comandos de UI para um processo externo Java Swing via JSON em stdin/stdout. Requer um host Swing compatível com o protocolo da biblioteca. |
-| `InfraestruturaWindows` *(experimental)* | Node.js + host Windows externo | Encaminha comandos de UI para um processo externo Windows (WPF/WinUI/WinForms) via JSON em stdin/stdout. Recomendado para ambientes Windows-first. |
+| `InfraestruturaGtk` *(experimental)* | Node.js + host GTK externo | Encaminha comandos de UI para um processo externo GTK via JSON em stdin/stdout. Recomendado para ambientes Linux-first. Suporta `caixaLivre` e `definir-geometria` no protocolo. |
+| `InfraestruturaJavaSwing` *(experimental)* | Node.js + host Java externo | Encaminha comandos de UI para um processo externo Java Swing via JSON em stdin/stdout. Requer um host Swing compatível com o protocolo da biblioteca. Suporta `caixaLivre` e `definir-geometria`. |
+| `InfraestruturaWindows` *(experimental)* | Node.js + host Windows externo | Encaminha comandos de UI para um processo externo Windows (WPF/WinUI/WinForms) via JSON em stdin/stdout. Recomendado para ambientes Windows-first. Suporta `caixaLivre` e `definir-geometria`. |
 | `InfraestruturaVazia` | Qualquer (fallback) | Sem operações visuais; mantém estado de texto em memória. Usada em testes unitários e quando nenhuma outra infraestrutura se aplica. |
-| `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. |
+| `InfraestruturaWebView` | Extensão VS Code | Renderiza a janela em um `WebviewPanel` do VS Code, comunicando-se via `postMessage`. Requer chamada prévia a `definirFabricaPainelWebView()` em `@designliquido/delegua-node`. Suporta `caixaLivre` e geometria explícita. |
+| `InfraestruturaMacOS` *(experimental)* | Node.js + host macOS externo | Encaminha comandos de UI para um processo externo AppKit/Cocoa via JSON em stdin/stdout. Suporta `caixaLivre` e `definir-geometria`. |
 | `InfraestruturaElectronSpawn` *(em `delegua-node`)* | Linha de comando (Node.js) | Spawna um processo Electron filho e comunica-se via stdin/stdout com o mesmo protocolo JSON de `InfraestruturaWebView`. Selecionada automaticamente quando o pacote `electron` está instalado. |
 
 ### Como a infraestrutura é escolhida em `delegua-node`
@@ -183,6 +218,10 @@ Um esqueleto inicial do host Windows foi adicionado em:
 
 - `host-windows/`
 
+Um esqueleto inicial do host macOS foi adicionado em:
+
+- `host-macos/`
+
 ### Teste E2E opcional com host Java real
 
 Por padrão, os testes E2E de Swing ficam desativados para não depender de Java/JAR em todos os ambientes.
@@ -197,6 +236,8 @@ Para executar:
 3. Rode `yarn testes-unitarios`.
 
 O teste E2E está em `testes/infraestrutura-java-swing-e2e.test.ts`.
+
+Esse teste agora também cobre `caixaLivre`, `definirPosicao()` e `definirTamanho()`.
 
 Alternativa automatizada (compila host + roda E2E):
 
@@ -225,6 +266,8 @@ Para executar manualmente:
 
 O teste E2E está em `testes/infraestrutura-gtk-e2e.test.ts`.
 
+Esse teste agora também cobre `caixaLivre`, `definirPosicao()` e `definirTamanho()`.
+
 Alternativa automatizada (compila host + roda E2E):
 
 ```bash
@@ -246,6 +289,8 @@ Para executar manualmente:
 3. Rode `yarn testes-unitarios`.
 
 O teste E2E está em `testes/infraestrutura-windows-e2e.test.ts`.
+
+Esse teste agora também cobre `caixaLivre`, `definirPosicao()` e `definirTamanho()`.
 
 Alternativa automatizada (publica host + roda E2E):
 
